@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mission 3 – Analyse des données KDou (Nouvelle version) avec SQL.</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="brand" href="index.html">KDou – Rapport SAE & Web</a>
+        <nav class="nav">
+            <ul class="nav__list">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="mission1.html">Mission 1</a></li>
+                <li><a href="mission2.html">Mission 2</a></li>
+                <li><a href="mission3.html" aria-current="page">Mission 3</a></li>
+                <li><a href="conclusion.html">Conclusion</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="container panel">
+            <h1>Mission 3 : Analyse des données KDou (nouvelle version) avec SQL</h1>
+        </div>
+    </section>
+
+    <section class="section">
+
+        <!-- 1. Contexte -->
+        <div class="container panel">
+            <h2>1. Le contexte</h2>
+            <p>Dans cette troisième mission, nous avons exploité une nouvelle version de la base de données KDou afin d’effectuer des analyses plus poussées à l’aide du langage <strong>SQL</strong>.</p>
+            <p>Contrairement aux missions précédentes utilisant le <strong>QBE</strong> ou des requêtes simples, cette mission repose sur des requêtes SQL avancées, incluant des calculs de chiffre d’affaires, des jointures multiples et des filtres complexes.</p>
+            <p>L’objectif était d’extraire des indicateurs pertinents autour de plusieurs thématiques&nbsp;:</p>
+            <ul>
+                <li>La santé et l’alimentation (desserts, boissons, produits transformés…)</li>
+                <li>L’offre commerciale de KDou</li>
+                <li>La provenance des produits (UE / hors UE)</li>
+                <li>L’étude de la clientèle, de la fidélité et des partenariats</li>
+            </ul>
+        </div>
+
+        <!-- 2. Indicateur CA Boissons & Desserts -->
+        <div class="container panel">
+            <h2>2. Chiffre d’affaires annuel des catégories Boissons et Desserts</h2>
+
+            <h3>a. Indicateur</h3>
+            <p>Cet indicateur calcule le chiffre d’affaires global généré par les produits appartenant aux catégories <strong>Boissons</strong> et <strong>Desserts</strong>, pour chaque année.</p>
+            <p>Il permet de mesurer la performance commerciale de ces deux familles de produits, souvent associées aux nouvelles préoccupations nutritionnelles et de santé.</p>
+
+            <h3>b. Construction</h3>
+            <p>Pour obtenir cet indicateur, nous avons&nbsp;:</p>
+            <ul>
+                <li>relié les tables <strong>Categorie</strong>, <strong>Produit</strong>, <strong>DetailCommande</strong> et <strong>Commande</strong> ;</li>
+                <li>calculé le chiffre d’affaires avec la formule&nbsp;: <code>Quantité × coût d’achat × coefficient de marge × (1 – remise)</code> ;</li>
+                <li>filtré sur les catégories «&nbsp;Boissons&nbsp;» et «&nbsp;Desserts&nbsp;» ;</li>
+                <li>regroupé les résultats par année ;</li>
+                <li>sommer le chiffre d’affaires annuel.</li>
+            </ul>
+
+            <h3>c. Code SQL</h3>
+            <div class="panel--soft" style="padding:1rem; margin:1rem 0;">
+                <pre><code>SELECT CCUR(SUM(Categorie.CoefMarge * Produit.CoutAchat * DetailCommande.Quantité * (1 - DetailCommande.[Remise (%)]))) AS CA,
+       YEAR(Commande.Datecde) AS Annee
+FROM Categorie
+INNER JOIN (Commande
+INNER JOIN (Produit
+INNER JOIN DetailCommande ON Produit.RefProd = DetailCommande.[Réf produit])
+ON Commande.[N° commande] = DetailCommande.[N° commande])
+ON Categorie.CodeCateg = Produit.CodeCateg
+WHERE Categorie.NomCateg = "Boissons"
+   OR Categorie.NomCateg = "Desserts"
+GROUP BY YEAR(Commande.Datecde)
+ORDER BY 2;</code></pre>
+            </div>
+            <figure>
+                <img src="assets/img/img8.png" alt="Résultat de la requête " class="img-small">
+                <figcaption class="img-caption">
+                    Résultat de la requête SQL
+                </figcaption>
+            </figure>
+            <h3>d. Interprétation</h3>
+            <p>Le tableau obtenu présente, pour chaque année, le chiffre d’affaires cumulé des catégories Boissons et Desserts. Cet indicateur est important car&nbsp;:</p>
+            <ul>
+                <li>il permet d’évaluer l’évolution des ventes dans des catégories liées à la santé ;</li>
+                <li>il montre si les desserts et boissons demeurent attractifs ;</li>
+                <li>il aide KDou à ajuster son offre si certaines tendances diminuent ou augmentent ;</li>
+                <li>il met en évidence les années où la marge sur ces catégories est la plus élevée.</li>
+            </ul>
+            <p>Il s’agit d’un outil essentiel pour anticiper les besoins d’approvisionnement et adapter l’offre produit.</p>
+        </div>
+
+        <!-- 3. Indicateur Invendus -->
+        <div class="container panel">
+            <h2>3. Invendus : produits carnés jamais commandés</h2>
+
+            <h3>a. Indicateur</h3>
+            <p>Cet indicateur compte le nombre de produits carnés présents dans l’offre de KDou qui n’ont jamais été commandés par les clients.</p>
+            <p>Il permet d’évaluer la pertinence de cette catégorie dans l’offre commerciale et d’identifier les produits potentiellement inutiles ou à retirer du catalogue.</p>
+
+            <h3>b. Construction</h3>
+            <ul>
+                <li>Relier les tables <strong>PRODUIT</strong> et <strong>CATEGORIE</strong> pour identifier les produits appartenant à la catégorie «&nbsp;Viandes&nbsp;» ;</li>
+                <li>filtrer uniquement les produits de la catégorie Viandes ;</li>
+                <li>comparer avec la table <strong>DetailCommande</strong> pour repérer les produits qui n’apparaissent jamais dans les commandes ;</li>
+                <li>utiliser un <code>NOT IN</code> pour identifier les références absentes des ventes ;</li>
+                <li>compter le nombre total de produits carnés non vendus.</li>
+            </ul>
+
+            <h3>c. Code SQL</h3>
+            <div class="panel--soft" style="padding:1rem; margin:1rem 0;">
+                <pre><code>SELECT COUNT(*) AS [NbProduitsCarnesNonCommandes]
+FROM PRODUIT AS P
+INNER JOIN CATEGORIE AS C ON P.CodeCateg = C.CodeCateg
+WHERE C.NomCateg = "Viandes"
+  AND P.RefProd NOT IN (
+      SELECT [Réf produit]
+      FROM DETAILCOMMANDE
+  );</code></pre>
+            </div>
+
+            <h3>d. Interprétation</h3>
+            <p>Le résultat indique le nombre total de produits carnés de l’offre KDou qui n’ont jamais été achetés. Cela peut révéler&nbsp;:</p>
+            <ul>
+                <li>un désintérêt croissant pour la viande ;</li>
+                <li>une évolution des habitudes alimentaires des clients ;</li>
+                <li>une catégorie trop large ou mal adaptée à la demande ;</li>
+                <li>des produits à retirer, remplacer ou repenser.</li>
+            </ul>
+            <p>Cet indicateur est très utile pour optimiser l’offre commerciale, réduire les coûts liés aux stocks inutiles et adapter le catalogue aux besoins réels des clients.</p>
+        </div>
+
+        <!-- 4. Indicateur Environnement -->
+        <div class="container panel">
+            <h2>4. Environnement : origine UE / hors UE des produits</h2>
+
+            <h3>a. Indicateur</h3>
+            <p>Cet indicateur permet de connaître la répartition des produits de KDou selon leur origine géographique, en distinguant&nbsp;:</p>
+            <ul>
+                <li>les produits provenant de pays membres de l’Union européenne ;</li>
+                <li>et ceux provenant de pays hors UE.</li>
+            </ul>
+            <p>L’objectif est d’évaluer l’impact environnemental des importations, la distance de transport et la dépendance aux fournisseurs internationaux.</p>
+
+            <h3>b. Construction</h3>
+            <ul>
+                <li>Relier la table <strong>Produit</strong> et la table <strong>Fournisseur</strong> via la clé <code>NoFour</code> ;</li>
+                <li>relier ensuite <strong>Fournisseur</strong> et <strong>Pays</strong> avec <code>NoPays</code> pour savoir dans quel pays se trouve chaque fournisseur ;</li>
+                <li>utiliser le champ <code>UE</code> de la table <strong>Pays</strong> (OUI/NON) pour distinguer UE / hors UE ;</li>
+                <li>regrouper les produits par zone (UE / hors UE) ;</li>
+                <li>compter le nombre total de produits associés à chaque zone.</li>
+            </ul>
+
+            <h3>c. Code SQL</h3>
+            <div class="panel--soft" style="padding:1rem; margin:1rem 0;">
+                <pre><code>SELECT
+    P.UE AS Zone,
+    Count(Pr.RefProd) AS NbProduits
+FROM
+    (Produit AS Pr
+        INNER JOIN Fournisseur AS F
+            ON Pr.NoFour = F.NoFour)
+        INNER JOIN Pays AS P
+            ON F.NoPays = P.NoPays
+GROUP BY
+    P.UE;</code></pre>
+            </div>
+
+            <h3>d. Interprétation</h3>
+            <p>Cet indicateur affiche le nombre de produits provenant&nbsp;:</p>
+            <ul>
+                <li>soit d’un pays membre de l’Union européenne ;</li>
+                <li>soit d’un pays extérieur à l’UE.</li>
+            </ul>
+            <p>Un nombre élevé de produits hors UE peut indiquer&nbsp;:</p>
+            <ul>
+                <li>une empreinte carbone plus importante (transport longue distance) ;</li>
+                <li>un coût logistique plus élevé ;</li>
+                <li>une dépendance aux importations internationales ;</li>
+                <li>un impact environnemental plus lourd.</li>
+            </ul>
+            <p>Un nombre élevé de produits UE peut au contraire indiquer&nbsp;:</p>
+            <ul>
+                <li>des circuits courts ou moyens ;</li>
+                <li>des livraisons plus rapides ;</li>
+                <li>des coûts réduits ;</li>
+                <li>une politique d’achat plus durable.</li>
+            </ul>
+            <p>Cet indicateur permet donc à KDou de mieux comprendre l’impact écologique de son catalogue et d’orienter sa politique d’achat vers des fournisseurs plus proches.</p>
+        </div>
+
+        <!-- 5. Indicateur Clients affluents -->
+        <div class="container panel">
+            <h2>5. Clients affluents : clients principaux et affiliés</h2>
+
+            <h3>a. Indicateur</h3>
+            <p>Cette requête permet d’identifier quels clients possèdent des clients affiliés via le champ <code>CodeCliPart</code>. Elle donne une vue simple sur les réseaux de clients gérés par KDou et permet de repérer les clients principaux les plus importants.</p>
+
+            <h3>b. Construction</h3>
+            <ul>
+                <li>Travail sur la table <strong>Clientele</strong>, qui contient à la fois les clients et, le cas échéant, le code du client principal (<code>CodeCliPart</code>) ;</li>
+                <li>utilisation de <code>CodeCliPart</code> pour identifier le client principal, et de <code>CodeCli</code> pour compter les clients affiliés ;</li>
+                <li>filtrage des enregistrements avec <code>WHERE CodeCliPart IS NOT NULL</code> pour ne garder que les clients ayant des affiliés ;</li>
+                <li>agrégation avec <code>COUNT(CodeCli)</code> et <code>GROUP BY CodeCliPart</code> pour obtenir le nombre de clients affiliés par client principal ;</li>
+                <li>tri décroissant avec <code>ORDER BY COUNT(CodeCli) DESC</code> pour mettre en évidence les clients principaux les plus importants.</li>
+            </ul>
+
+            <h3>c. Code SQL</h3>
+            <div class="panel--soft" style="padding:1rem; margin:1rem 0;">
+                <pre><code>SELECT
+    Cl.CodeCliPart AS ClientPrincip,
+    Count(Cl.CodeCli) AS NbClientsAff
+FROM
+    Clientele AS Cl
+WHERE
+    Cl.CodeCliPart Is Not Null
+GROUP BY
+    Cl.CodeCliPart
+ORDER BY
+    Count(Cl.CodeCli) DESC;</code></pre>
+            </div>
+
+            <h3>d. Interprétation</h3>
+            <p>Concrètement, pour une entreprise qui vend en gros, cet indicateur permet de&nbsp;:</p>
+            <ul>
+                <li>identifier les clients les plus importants, dont les affiliés représentent une part majeure du chiffre d’affaires ;</li>
+                <li>optimiser la relation commerciale en accordant des priorités, des offres spéciales ou un suivi personnalisé à ces clients influents ;</li>
+                <li>mieux gérer le réseau de distribution en comprenant la structure des ventes indirectes ;</li>
+                <li>prendre des décisions marketing et logistiques plus efficaces en ciblant les clients les plus affluents.</li>
+            </ul>
+            <p>Cette analyse met en évidence les clients clés qui influencent fortement la distribution et le chiffre d’affaires, ce qui est indispensable pour une gestion stratégique et rentable du réseau client.</p>
+        </div>
+
+        <div class="container panel">
+            <h2>Synthèse des analyses réalisées</h2>
+            <p>L’analyse des données réalisée au cours des trois missions met en lumière des tendances importantes sur l’évolution de la consommation dans plusieurs catégories de produits.</p>
+            <p>Les calculs de chiffre d’affaires appliqués à des groupes de produits ciblés montrent si certaines familles — comme les boissons, les desserts ou les produits carnés — doivent être renforcées, réajustées ou allégées.</p>
+            <p>Ces indicateurs permettent à KDou de&nbsp;:</p>
+            <ul>
+                <li>repérer les segments en croissance ou en baisse ;</li>
+                <li>ajuster son offre face aux nouvelles préoccupations alimentaires ;</li>
+                <li>optimiser ses marges et ses approvisionnements ;</li>
+                <li>mieux comprendre la fidélité et les attentes de sa clientèle.</li>
+            </ul>
+        </div>
+
+    </section>
+</main>
+</body>
+</html>

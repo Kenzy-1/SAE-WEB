@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mission 1 – Analyse et fiabilisation de la base de données KDou</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+<header class="site-header">
+    <div class="container header-inner">
+        <a class="brand" href="index.html">KDou – Rapport SAE & Web</a>
+        <nav class="nav">
+            <ul class="nav__list">
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="mission1.html" aria-current="page">Mission 1</a></li>
+                <li><a href="mission2.html">Mission 2</a></li>
+                <li><a href="mission3.html">Mission 3</a></li>
+                <li><a href="conclusion.html">Conclusion</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="container panel">
+            <h1>Mission 1 : Analyse et fiabilisation de la base de données KDou</h1>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container panel">
+            <h2>1. Le contexte</h2>
+            <p>Pour cette première mission, nous avons travaillé sur la base de données KDou fournie au format <strong>Microsoft Excel</strong>. Elle contient toutes les informations nécessaires à l’entreprise : fournisseurs, produits, catégories, clients, commandes et détails de commandes.</p>
+            <p>L’objectif était de comprendre l’organisation de la base, d’identifier les relations entre les tables et de détecter les erreurs ou incohérences.</p>
+            <figure>
+                <img src="assets/img/img1.png" alt="contexte" class="img-panel">
+                <figcaption class="img-caption">informations nécessaires à l’entreprise</figcaption>
+            </figure>
+        </div>
+
+        <div class="container panel">
+            <h2>2. Étude des données</h2>
+
+            <h3>a. Analyse des tables et des relations</h3>
+            <p>Nous avons utilisé <strong>Microsoft Excel</strong> pour visualiser les relations et mieux comprendre la structure de la base. Les clés primaires et étrangères jouent un rôle essentiel pour assurer la cohérence entre les tables. Par exemple :</p>
+            <ul>
+                <li><code>NoFour</code> relie les produits à leur fournisseur.</li>
+                <li><code>CodeCateg</code> associe chaque produit à sa catégorie.</li>
+            </ul>
+
+            <p>Chaque table a une fonction spécifique et elles sont toutes liées entre elles :</p>
+            <ul>
+                <li>Les fournisseurs permettent de retrouver l’origine des produits.</li>
+                <li>La table <strong>Produits</strong> centralise les informations sur le stock et le coût.</li>
+                <li>La table <strong>Catégories</strong> classe les produits par famille.</li>
+                <li>Les tables <strong>Commande</strong> et <strong>DétailCommande</strong> relient les clients aux achats réalisés.</li>
+            </ul>
+
+            <h3>b. Détection des anomalies</h3>
+            <p>Plusieurs anomalies ont été relevées :</p>
+            <ul>
+                <li>Erreurs de saisie : par exemple la ville « Lille » écrite de deux façons différentes (« Lille » et « Lillle »), ce qui peut fausser les recherches et statistiques.</li>
+                <figure>
+                    <img src="assets/img/img2.png" alt="Erreur de saisie Lille / Lillle" class="img-panel">
+                    <figcaption class="img-caption">Erreur de saisie.</figcaption>
+                </figure>
+                <li>Violations de clé étrangère : par exemple un client <code>FOLK0</code> présent dans certaines commandes mais absent de la table <strong>Clientèle</strong>, ou des produits liés à une catégorie inexistante.</li>
+                <figure>
+                    <img src="assets/img/img3.png" alt="Violation de clé étrangère FOLKO" class="img-panel">
+                    <img src="assets/img/img4.png" alt="Violation de clé étrangère FOLKO" class="img-panel">
+                    <figcaption class="img-caption">Violation de clé étrangère FOLKO.</figcaption>
+                </figure>
+            </ul>
+        </div>
+
+        <div class="container panel">
+            <h2>3. Solutions proposées</h2>
+            <ul>
+                <li>Ajouter des règles de validation automatique pour éviter les doublons ou les saisies incorrectes.</li>
+                <li>Créer des tables de référence (liste unique de pays, de catégories…) pour uniformiser les données.</li>
+                <li>Mettre en place des contraintes de référence strictes entre les tables afin d’éviter les incohérences (commandes sans client valide, produits sans catégorie).</li>
+            </ul>
+        </div>
+
+        <div class="container panel">
+            <h2>4. Conclusion</h2>
+            <p>Cette mission nous a permis de mieux comprendre la structure d’une base de données relationnelle et l’importance de la fiabilisation des données.</p>
+            <p>L’analyse de la base KDou a révélé plusieurs points d’amélioration essentiels pour assurer la cohérence des informations et optimiser la logistique et les analyses commerciales de l’entreprise.</p>
+        </div>
+    </section>
+</main>
+</body>
+</html>
